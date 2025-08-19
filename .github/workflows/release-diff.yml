@@ -23,25 +23,29 @@ jobs:
             echo "prev_tag=" >> $GITHUB_OUTPUT
           fi
 
-      - name: Prepare update folder (diff only)
+      - name: Prepare update folder (diff only, no recursion)
         run: |
           set -e
           mkdir -p update
           if [ -z "${{ steps.prev.outputs.prev_tag }}" ]; then
-            # 1ère release : tout prendre
-            rsync -a --exclude='.git' ./ update/
+            # 1ère release : prendre UNIQUEMENT les fichiers suivis par git,
+            # et exclure .github / fichiers de meta
+            git ls-files -z | \
+              grep -zvE '^(README|LICENSE|CHANGELOG|\.gitignore|\.gitattributes|\.github/)' | \
+              xargs -0 -I{} bash -lc 'mkdir -p "update/$(dirname "{}")"; cp "{}" "update/{}"'
+            : > update/deletes.txt
           else
             git diff --name-only ${{ steps.prev.outputs.prev_tag }}..HEAD > files.txt
             git diff --diff-filter=D --name-only ${{ steps.prev.outputs.prev_tag }}..HEAD > update/deletes.txt
             while IFS= read -r f; do
-              [ -z "$f" ] && continue
+              [ -n "$f" ] || continue
               if [ -f "$f" ]; then
                 mkdir -p "update/$(dirname "$f")"
                 cp "$f" "update/$f"
               fi
             done < files.txt
           fi
-          # La version vient du tag (on enlève le 'v')
+          # Version depuis le tag (sans le 'v')
           echo "${GITHUB_REF_NAME#v}" > update/version.txt
           cp update/version.txt version.txt
 
