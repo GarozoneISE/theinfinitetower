@@ -31,24 +31,24 @@ jobs:
           set -e
           mkdir -p update
           if [ -z "${{ steps.prev.outputs.prev_tag }}" ]; then
-            # 1ère release : prendre UNIQUEMENT les fichiers suivis par git,
-            # et exclure .github / fichiers de meta
-            git ls-files -z | \
-              grep -zvE '^(README|LICENSE|CHANGELOG|\.gitignore|\.gitattributes|\.github/)' | \
-              xargs -0 -I{} bash -lc 'mkdir -p "update/$(dirname "{}")"; cp "{}" "update/{}"'
+            # 1ère release : copier UNIQUEMENT les fichiers suivis par git, en excluant .github et meta
+            git ls-files -z -- . ':!/.github' ':!/.github/**' ':!README*' ':!LICENSE*' ':!CHANGELOG*' ':!*.md' \
+              | while IFS= read -r -d '' f; do
+                  mkdir -p "update/$(dirname "$f")"
+                  cp "$f" "update/$f"
+                done
             : > update/deletes.txt
           else
+            # Diff depuis le tag précédent
             git diff --name-only ${{ steps.prev.outputs.prev_tag }}..HEAD > files.txt
             git diff --diff-filter=D --name-only ${{ steps.prev.outputs.prev_tag }}..HEAD > update/deletes.txt
-            while IFS= read -r f; do
-              [ -n "$f" ] || continue
-              if [ -f "$f" ]; then
-                mkdir -p "update/$(dirname "$f")"
-                cp "$f" "update/$f"
-              fi
-            done < files.txt
+            grep -vE '^(\.github/|README|LICENSE|CHANGELOG|.*\.md$)' files.txt | while read -r f; do
+              [ -f "$f" ] || continue
+              mkdir -p "update/$(dirname "$f")"
+              cp "$f" "update/$f"
+            done
           fi
-          # Version depuis le tag (sans le 'v')
+          # Version (sans le 'v')
           echo "${GITHUB_REF_NAME#v}" > update/version.txt
           cp update/version.txt version.txt
 
