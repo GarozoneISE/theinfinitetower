@@ -1,0 +1,63 @@
+name: Build diff and release
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute previous tag
+        id: prev
+        run: |
+          set -e
+          if git describe --tags --abbrev=0 --match "v*" HEAD^ >/dev/null 2>&1; then
+            echo "prev_tag=$(git describe --tags --abbrev=0 --match 'v*' HEAD^)" >> $GITHUB_OUTPUT
+          else
+            echo "prev_tag=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Prepare update folder (diff only)
+        run: |
+          set -e
+          mkdir -p update
+          if [ -z "${{ steps.prev.outputs.prev_tag }}" ]; then
+            # 1ère release : tout prendre
+            rsync -a --exclude='.git' ./ update/
+          else
+            git diff --name-only ${{ steps.prev.outputs.prev_tag }}..HEAD > files.txt
+            git diff --diff-filter=D --name-only ${{ steps.prev.outputs.prev_tag }}..HEAD > update/deletes.txt
+            while IFS= read -r f; do
+              [ -z "$f" ] && continue
+              if [ -f "$f" ]; then
+                mkdir -p "update/$(dirname "$f")"
+                cp "$f" "update/$f"
+              fi
+            done < files.txt
+          fi
+          # La version vient du tag (on enlève le 'v')
+          echo "${GITHUB_REF_NAME#v}" > update/version.txt
+          cp update/version.txt version.txt
+
+      - name: Create zip
+        run: |
+          cd update
+          zip -r ../update.zip .
+          cd ..
+          sha256sum update.zip > update.zip.sha256
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          files: |
+            update.zip
+            update.zip.sha256
+            version.txt
