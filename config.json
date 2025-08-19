@@ -1,6 +1,6 @@
 ﻿{
-  "Host": "rock-wheels.gl.at.ply.gg",
-  "Port": 16006,
+  "Host": "localhost",
+  "Port": 5400,
   "GameFont": "sourcesansproblack",
   "EntityNameFont": "sourcesansproblack",
   "ChatBubbleFont": "sourcesansproblack",
