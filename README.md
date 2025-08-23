@@ -52,4 +52,4 @@
 
 * **Bugs** : joindre un **log client** (`/logs`) + contexte (où, quoi, comment reproduire).
 * **Gameplay** : indiquer l’**étage**, l’**équipement**, la **recette** concernée.
-* **Contact** : `#bugs-report` sur Discord.
+* **Contact** : `#bugs-report` sur Discord. (https://discord.gg/NgEreCbVWp)
