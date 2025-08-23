@@ -28,7 +28,7 @@
 
 > Le jeu **n’exige pas de cash‑shop**. Toute la puissance se gagne **en jouant**.
 
-## Contrôles (par défaut Intersect)
+## Contrôles (par défaut)
 
 * Déplacement : WASD (ou flèches)
 * Interagir / Parler : **E**
