@@ -1,0 +1,5 @@
+/*
+!/.gitignore
+!/resources/
+*.zip
+/resources/autosaves/
