@@ -531,8 +531,8 @@
       "None": "None",
       "Rare": "Rare",
       "Uncommon": "Uncommon",
-      "Mythic": "Mythic",
-      "Abyssal": "Abyssal"
+      "Mythic": "6:Mythic",
+      "Abyssal": "7:Abyssal"
     },
     "RegularAndPercentage": "{00} + {01}%",
     "ScalingPercentage": "Scaling Percentage:",
